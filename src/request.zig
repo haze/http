@@ -6,17 +6,15 @@ const Uri = @import("./uri/uri.zig").Uri;
 const UriError = @import("./uri/uri.zig").Error;
 const Version = @import("versions.zig").Version;
 
-
-const AllocationError = error {
+const AllocationError = error{
     OutOfMemory,
 };
 
-const RequestBuilderError = error {
+const RequestBuilderError = error{
     UriRequired,
 };
 
 pub const RequestError = AllocationError || RequestBuilderError || UriError || Headers.Error;
-
 
 pub const RequestBuilder = struct {
     build_error: ?RequestError,
@@ -26,7 +24,7 @@ pub const RequestBuilder = struct {
     headers: Headers,
 
     pub fn default(allocator: *Allocator) RequestBuilder {
-        return RequestBuilder {
+        return RequestBuilder{
             .build_error = null,
             ._method = Method.Get,
             ._uri = null,
@@ -34,8 +32,7 @@ pub const RequestBuilder = struct {
             .headers = Headers.init(allocator),
         };
     }
-
-    inline fn build_has_failed(self: *RequestBuilder) bool {
+    fn build_has_failed(self: *RequestBuilder) callconv(.Inline) bool {
         return self.build_error != null;
     }
 
@@ -49,13 +46,7 @@ pub const RequestBuilder = struct {
             return error.UriRequired;
         }
 
-        return Request {
-            .method = self._method,
-            .uri = self._uri.?,
-            .version = self._version,
-            .headers = self.headers,
-            .body = value
-        };
+        return Request{ .method = self._method, .uri = self._uri.?, .version = self._version, .headers = self.headers, .body = value };
     }
 
     pub fn connect(self: *RequestBuilder, _uri: []const u8) *RequestBuilder {
@@ -173,7 +164,6 @@ pub const RequestBuilder = struct {
     }
 };
 
-
 pub const Request = struct {
     method: Method,
     uri: Uri,
@@ -189,7 +179,6 @@ pub const Request = struct {
         self.headers.deinit();
     }
 };
-
 
 const expect = std.testing.expect;
 const expectError = std.testing.expectError;
@@ -230,12 +219,12 @@ test "Build with specific values" {
 
 test "Build with a custom method" {
     var request = try Request.builder(std.testing.allocator)
-        .method(Method { .Custom = "LAUNCH-MISSILE"})
+        .method(Method{ .Custom = "LAUNCH-MISSILE" })
         .uri("https://ziglang.org/")
         .body("");
     defer request.deinit();
 
-    switch(request.method) {
+    switch (request.method) {
         .Custom => |value| {
             expect(std.mem.eql(u8, value, "LAUNCH-MISSILE"));
         },
